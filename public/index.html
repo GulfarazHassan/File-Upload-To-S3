@@ -1,0 +1,92 @@
+<html>
+    <head>
+        <title>node s3 app</title>
+        <style>
+            .card {
+                border: 1px solid #eee;
+                border-radius: 3px;
+                background-color: #fff;
+                cursor: pointer;
+                display: inline-block;
+                width: 30%;
+                margin: 1.5%;
+                padding: 20px;
+                box-shadow: 1px 1px 3px #999;
+            }
+        </style>
+    </head>
+    <body onload="loadData()">
+        Hello! this is node s3 app
+        <div>
+            <input type="file" id="s3-file" onchange="saveFile(this)"/>
+        </div>
+
+        <div id="container">
+            <h4>Bucket Data</h4>
+            <div id="bucket-data-list">
+
+            </div>
+
+        </div>
+
+        <script>
+            let list = [];
+            function saveFile(event) {
+                const xhr = new XMLHttpRequest();
+                const formData = new FormData();
+                const file = event.files[0];
+                formData.append('s3-file', file);
+
+                xhr.onreadystatechange = (state) => {
+                    if(xhr.readyState === XMLHttpRequest.DONE) {
+                    }
+                }
+
+                xhr.timeout = 5000;
+                xhr.open('POST', '/upload-to-s3');
+                xhr.send(formData);
+            }
+
+            function loadData() {
+                getBucketObjectList();
+            }
+
+            function getBucketObjectList() {
+                getData('/all-files', (data = []) => {
+                    data = JSON.parse(data);
+                    list = data;
+                    const objectList = data.map((item, index) => {
+                        return `
+                            <div class="card" onclick="downloadFile(${index})">
+                                File Name: ${item.key} </br>
+                                File Size: ${item.size} </br>
+                                File Modified: ${item.lastModified}
+                            </div>
+                        `
+                    });
+                    document.getElementById('bucket-data-list').innerHTML = objectList;
+                });
+            }
+
+            function downloadFile(index) {
+                const fileName = (list[index] || {}).key;
+                getData(`/get-object-url/${fileName}`, (url) => {
+                    window.open(url, '_blank');
+                });
+            }
+
+
+            function getData(url, cb) {
+                const xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = state => {
+                    if(xhr.readyState === XMLHttpRequest.DONE) {
+                        cb(xhr.responseText);
+                    }
+                }
+                xhr.timeout = 10000;
+                xhr.open('GET', url);
+                xhr.send();
+            }
+        </script>
+    </body>
+</html>
