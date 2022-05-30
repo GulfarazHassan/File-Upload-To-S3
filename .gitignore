@@ -1,0 +1,12 @@
+build/
+build
+node_modules/
+.stignore
+.stfolder
+.DS_Store
+.idea
+src/logs/
+src/logs
+src/config/env.js
+coverage
+coverage/
