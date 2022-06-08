@@ -37,6 +37,38 @@ async function s3Get(req, res) {
   }
 }
 
+async function upLoadMultipleFiles(req, res) {
+  const form = formidable({ multiples: true });
+  form.parse(req, (err, fields, files) => {
+    if (err) {
+      res.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain' });
+      res.end(String(err));
+      return;
+    }
+    let sendData = [];
+    let nnum = 0;
+    if (!files.file.length) {
+      return res
+        .status(500)
+        .json({ success: false, message: 'Please provide multiple files' });
+    }
+
+    files.file.map(async (data, index) => {
+      console.log('In mu 2');
+      const fileUploaded = await uploadFileToS3(data, 'pupeee');
+
+      if (fileUploaded) {
+        sendData.push(fileUploaded.Location);
+        nnum = nnum + 1;
+        if (nnum == files.file.length) {
+          console.log('Updatedd :: ', sendData);
+          res.json({ success: true, data: sendData });
+        }
+      }
+    });
+  });
+}
+
 async function readFormData(req) {
   return new Promise((resolve) => {
     const dataObj = {};
@@ -68,4 +100,5 @@ module.exports = {
   s3Upload,
   s3Get,
   getSignedUrl,
+  upLoadMultipleFiles,
 };
